@@ -16,7 +16,7 @@ playerLevel <- function(x){
 pubg$Level <- sapply(pubg$solo_WinRatio, playerLevel)
 str(pubg)
 
-#check if there are NA's in winRtio
+#check if there are NA's in the data
 table(is.na(pubg))
 
 
@@ -33,19 +33,20 @@ unique(pubg$tracker_id, incomparables = FALSE)
 unique(pubg$player_name, incomparables = FALSE)
 
 
-pubg$player_name <- NULL
 pubg.prepared <- pubg
-pubg.prepared$solo_WinRatio <- NULL
-pubg.prepared$tracker_id <- NULL
+pubg.prepared$player_name <- NULL
+pubg.prepared$tracker_id <- as.factor(pubg.prepared$tracker_id)
+#pubg.prepared$solo_WinRatio <- NULL
 
 str(pubg.prepared)
+
+library(ggplot2)
 #distribution of target column
 ggplot(pubg, aes(Level)) + geom_bar()
 
 #check features
-library(ggplot2)
-
 #we will mark the influence between 1-5
+
 #does 'solo_KillDeathRatio' affect Level?
 ggplot(pubg, aes(Level ,solo_KillDeathRatio)) + geom_boxplot()#1
 
@@ -80,6 +81,64 @@ pubg.prepared$solo_WeeklyKills <- NULL
 
 #does 'solo_WeeklyKills' affect Level?
 ggplot(pubg, aes(Level ,solo_WeeklyKills)) + geom_boxplot()#1
+
+#see ralation between TimeSurvived|Kills|WinTop10Ratio
+ggplot(data = pubg.prepared) + 
+  geom_point(mapping = aes(x = solo_TimeSurvived, y = solo_WinTop10Ratio, color = solo_Kills))
+
+
+#changing column names 
+install.packages("tidyverse")
+library(tidyverse)
+
+#Show correlations 
+#install.packages("corrplot")
+library(corrplot)
+
+#check corr
+pubg.corr <- pubg.prepared
+pubg.corr$Level <- NULL
+pubg.corr$er_id <- NULL
+
+names(pubg.corr) <- substring(names(pubg.corr), 6)
+cor(pubg.corr)
+mat <- cor(pubg.corr)
+corrplot(mat, type = "upper" ,tl.pos = "td", 
+         method = 'circle', tl.cex = 0.5, tl.col = 'black',
+         order = "hclust", diag = FALSE)
+
+
+#remove columns with high correlation
+cor(pubg.corr$RoundsPlayed, pubg.corr$Losses)
+pubg.corr$Losses <- NULL
+cor(pubg.corr$Kills, pubg.corr$DamageDealt)
+pubg.corr$DamageDealt <- NULL
+
+
+#check the relation between the target column to other columns
+plot(pubg.prepared$Level,pubg.prepared$solo_TimeSurvived)
+
+table(pubg.corr$TimeSurvived)
+hist(pubg.corr$KillDeathRatio)
+hist(pubg.corr$WinRatio)#########################
+hist(pubg.corr$TimeSurvived)
+hist(pubg.corr$RoundsPlayed)
+hist(pubg.corr$Wins)
+hist(pubg.corr$WinTop10Ratio)
+hist(pubg.corr$Top10Ratio)
+hist(pubg.corr$Losses)
+hist(pubg.corr$Rating)
+hist(pubg.corr$Kills)
+hist(pubg.corr$HeadshotKillRatio)
+hist(pubg.corr$WeeklyKills)
+hist(pubg.corr$RoundMostKills)
+hist(pubg.corr$MaxKillStreaks)
+hist(pubg.corr$AvgSurvivalTime)
+hist(pubg.corr$WinPoints)
+hist(pubg.corr$Heals)
+
+
+
 
 
 
