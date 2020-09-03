@@ -13,13 +13,14 @@ playerLevel <- function(x){
   else "intermediate"
 }
 
+#add target column
 pubg$Level <- sapply(pubg$solo_WinRatio, playerLevel)
 str(pubg)
 
 #check if there are NA's in the data
 table(is.na(pubg))
 
-
+#inspect the target column distribution
 beginner.filter <- pubg$Level == 'beginner'
 intermediate.filter <- pubg$Level == 'intermediate'
 expert.filter <- pubg$Level == 'expert'
@@ -28,21 +29,18 @@ table(beginner.filter)
 table(intermediate.filter)
 table(expert.filter)
 
-?unique
-unique(pubg$tracker_id, incomparables = FALSE)
-unique(pubg$player_name, incomparables = FALSE)
-
+library(ggplot2)
+ggplot(pubg, aes(Level)) + geom_bar()
 
 pubg.prepared <- pubg
+
+unique(pubg$player_name, incomparables = FALSE)
+
 pubg.prepared$player_name <- NULL
 pubg.prepared$tracker_id <- as.factor(pubg.prepared$tracker_id)
 #pubg.prepared$solo_WinRatio <- NULL
 
 str(pubg.prepared)
-
-library(ggplot2)
-#distribution of target column
-ggplot(pubg, aes(Level)) + geom_bar()
 
 #check features
 #we will mark the influence between 1-5
@@ -70,14 +68,14 @@ ggplot(pubg, aes(Level ,solo_Rating)) + geom_boxplot()#3
 
 #does 'solo_Kills' affect Level?
 ggplot(pubg, aes(Level ,solo_Kills)) + geom_boxplot()#1
-pubg.prepared$solo_Kills <- NULL
+#pubg.prepared$solo_Kills <- NULL
 
 #does 'solo_HeadshotKillRatio' affect Level?
 ggplot(pubg, aes(Level ,solo_HeadshotKillRatio)) + geom_boxplot()#2
 
 #does 'solo_WeeklyKills' affect Level?
 ggplot(pubg, aes(Level ,solo_WeeklyKills)) + geom_boxplot()#1
-pubg.prepared$solo_WeeklyKills <- NULL
+#pubg.prepared$solo_WeeklyKills <- NULL
 
 #does 'solo_WeeklyKills' affect Level?
 ggplot(pubg, aes(Level ,solo_WeeklyKills)) + geom_boxplot()#1
@@ -88,25 +86,25 @@ ggplot(data = pubg.prepared) +
 
 
 #changing column names 
-install.packages("tidyverse")
+#install.packages("tidyverse")
 library(tidyverse)
 
 #Show correlations 
 #install.packages("corrplot")
 library(corrplot)
 
-#check corr
+#check correlation between columns with database that only contains numbers
 pubg.corr <- pubg.prepared
 pubg.corr$Level <- NULL
-pubg.corr$er_id <- NULL
+pubg.corr$tracker_id <- NULL
 
+#shorten the names of the columns (removing "solo_"...)
 names(pubg.corr) <- substring(names(pubg.corr), 6)
 cor(pubg.corr)
 mat <- cor(pubg.corr)
-corrplot(mat, type = "upper" ,tl.pos = "td", 
-         method = 'circle', tl.cex = 0.5, tl.col = 'black',
-         order = "hclust", diag = FALSE)
 
+corrplot(mat, method = 'circle', outline = T, tl.cex = 0.5,
+         tl.col = 'black', order = "hclust", diag = TRUE)
 
 #remove columns with high correlation
 cor(pubg.corr$RoundsPlayed, pubg.corr$Losses)
@@ -120,24 +118,35 @@ plot(pubg.prepared$Level,pubg.prepared$solo_TimeSurvived)
 
 table(pubg.corr$TimeSurvived)
 hist(pubg.corr$KillDeathRatio)
-hist(pubg.corr$WinRatio)#########################
+hist(pubg.corr$WinRatio)
 hist(pubg.corr$TimeSurvived)
 hist(pubg.corr$RoundsPlayed)
 hist(pubg.corr$Wins)
 hist(pubg.corr$WinTop10Ratio)
-hist(pubg.corr$Top10Ratio)
+hist(pubg.corr$Top10Ratio)#####
 hist(pubg.corr$Losses)
 hist(pubg.corr$Rating)
 hist(pubg.corr$Kills)
 hist(pubg.corr$HeadshotKillRatio)
 hist(pubg.corr$WeeklyKills)
+table(pubg.corr$WeeklyKills)
 hist(pubg.corr$RoundMostKills)
 hist(pubg.corr$MaxKillStreaks)
 hist(pubg.corr$AvgSurvivalTime)
-hist(pubg.corr$WinPoints)
+hist(pubg.corr$WinPoints)######
 hist(pubg.corr$Heals)
 
 
+#coercing columns from max value == binning
+hist(pubg.prepared$solo_WinPoints)
+coercex <- function(x){
+  ifelse(x>7500,7500,x)
+}
+pubg.prepared$solo_WinPoints <- sapply(pubg.prepared$solo_WinPoints, coercex(pubg.prepared$solo_WinPoints))
+str(pubg.prepared)
+
+?sapply
+hist()
 
 
 
