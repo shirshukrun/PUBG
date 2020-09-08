@@ -6,12 +6,13 @@ summary(pubg.raw)
 #create data to work on
 pubg <- pubg.raw
 
-#function to determine players level (devided by quartile statistics analysed in excel)
+#target column created according to column "solo_WinRatio" 
 playerLevel <- function(x){
   if(x<2) "beginner"
   else if(x>5.56) "expert"
   else "intermediate"
 }
+pubg.prepared$solo_WinRatio <- NULL
 
 #add target column
 pubg$Level <- sapply(pubg$solo_WinRatio, playerLevel)
@@ -47,6 +48,7 @@ str(pubg.prepared)
 
 #does 'solo_KillDeathRatio' affect Level?
 ggplot(pubg, aes(Level ,solo_KillDeathRatio)) + geom_boxplot()#1
+pubg.prepared$solo_KillDeathRatio <- NULL
 
 #does 'solo_TimeSurvived' affect Level?
 ggplot(pubg, aes(Level ,solo_TimeSurvived)) + geom_boxplot()#2
@@ -56,35 +58,33 @@ ggplot(pubg, aes(Level ,solo_RoundsPlayed)) + geom_boxplot()#2
 
 #does 'solo_Wins' affect Level?
 ggplot(pubg, aes(Level ,solo_Wins)) + geom_boxplot()#1
+pubg.prepared$solo_Wins <- NULL
 
 #does 'solo_WinTop10Ratio' affect Level?
 ggplot(pubg, aes(Level ,solo_WinTop10Ratio)) + geom_boxplot()#4
 
 #does 'solo_Losses' affect Level?
-ggplot(pubg, aes(Level ,solo_Losses)) + geom_boxplot()#1
+ggplot(pubg, aes(Level ,solo_Losses)) + geom_boxplot()#2
 
 #does 'solo_Rating' affect Level?
 ggplot(pubg, aes(Level ,solo_Rating)) + geom_boxplot()#3
 
 #does 'solo_Kills' affect Level?
 ggplot(pubg, aes(Level ,solo_Kills)) + geom_boxplot()#1
-#pubg.prepared$solo_Kills <- NULL
+pubg.prepared$solo_Kills <- NULL
 
 #does 'solo_HeadshotKillRatio' affect Level?
 ggplot(pubg, aes(Level ,solo_HeadshotKillRatio)) + geom_boxplot()#2
 
 #does 'solo_WeeklyKills' affect Level?
 ggplot(pubg, aes(Level ,solo_WeeklyKills)) + geom_boxplot()#1
-#pubg.prepared$solo_WeeklyKills <- NULL
-
-#does 'solo_WeeklyKills' affect Level?
-ggplot(pubg, aes(Level ,solo_WeeklyKills)) + geom_boxplot()#1
+pubg.prepared$solo_WeeklyKills <- NULL
 
 #see ralation between TimeSurvived|Kills|WinTop10Ratio
 ggplot(data = pubg.prepared) + 
   geom_point(mapping = aes(x = solo_TimeSurvived, y = solo_WinTop10Ratio, color = solo_Kills))
 
-
+str(pubg.prepared)
 #changing column names 
 #install.packages("tidyverse")
 library(tidyverse)
@@ -107,51 +107,48 @@ corrplot(mat, method = 'circle', outline = T, tl.cex = 0.5,
          tl.col = 'black', order = "hclust", diag = TRUE)
 
 #remove columns with high correlation
-cor(pubg.corr$RoundsPlayed, pubg.corr$Losses)
-pubg.corr$Losses <- NULL
-cor(pubg.corr$Kills, pubg.corr$DamageDealt)
-pubg.corr$DamageDealt <- NULL
+cor(pubg.prepared$solo_RoundsPlayed, pubg.prepared$solo_Losses)
+pubg.prepared$Losses <- NULL
+cor(pubg.prepared$solo_Kills, pubg.prepared$solo_DamageDealt)
+pubg.prepared$DamageDealt <- NULL
 
-
-#check the relation between the target column to other columns
-plot(pubg.prepared$Level,pubg.prepared$solo_TimeSurvived)
-
-table(pubg.corr$TimeSurvived)
-hist(pubg.corr$KillDeathRatio)
-hist(pubg.corr$WinRatio)
-hist(pubg.corr$TimeSurvived)
-hist(pubg.corr$RoundsPlayed)
-hist(pubg.corr$Wins)
-hist(pubg.corr$WinTop10Ratio)
-hist(pubg.corr$Top10Ratio)#####
-hist(pubg.corr$Losses)
-hist(pubg.corr$Rating)
-hist(pubg.corr$Kills)
-hist(pubg.corr$HeadshotKillRatio)
-hist(pubg.corr$WeeklyKills)
-table(pubg.corr$WeeklyKills)
-hist(pubg.corr$RoundMostKills)
-hist(pubg.corr$MaxKillStreaks)
-hist(pubg.corr$AvgSurvivalTime)
-hist(pubg.corr$WinPoints)######
-hist(pubg.corr$Heals)
-
-
-#coercing columns from max value == binning
+#check if bining needed 
+hist(pubg.prepared$solo_TimeSurvived)
+hist(pubg.prepared$solo_KillDeathRatio)
+hist(pubg.prepared$solo_WinRatio)####
+hist(pubg.prepared$solo_TimeSurvived)
+hist(pubg.prepared$solo_RoundsPlayed)
+hist(pubg.prepared$solo_Wins)
+hist(pubg.prepared$solo_WinTop10Ratio)
+hist(pubg.prepared$solo_Top10Ratio)#####
+hist(pubg.prepared$solo_Losses)
+hist(pubg.prepared$solo_Rating)
+hist(pubg.prepared$solo_Kills)
+hist(pubg.prepared$solo_HeadshotKillRatio)
+hist(pubg.prepared$solo_WeeklyKills)
+hist(pubg.prepared$solo_RoundMostKills)
+hist(pubg.prepared$solo_MaxKillStreaks)
+hist(pubg.prepared$solo_AvgSurvivalTime)
 hist(pubg.prepared$solo_WinPoints)
+hist(pubg.prepared$solo_Heals)
+
+
+#coercing column "solo_Top10Ratio"
+table(pubg.prepared$solo_Top10Ratio)
 coercex <- function(x){
-  ifelse(x>7500,7500,x)
+  ifelse(x>60,60,x)
 }
-pubg.prepared$solo_WinPoints <- sapply(pubg.prepared$solo_WinPoints, coercex(pubg.prepared$solo_WinPoints))
-str(pubg.prepared)
+pubg.prepared$solo_Top10Ratio <- sapply(pubg.prepared$solo_Top10Ratio, coercex)
+hist(pubg.prepared$solo_Top10Ratio)
 
-?sapply
-hist()
+hist(pubg.prepared$solo_WinTop10Ratio)
+coercey <- function(x){
+  ifelse(x>0.7,0.7,x)
+}
+pubg.prepared$solo_WinTop10Ratio <- sapply(pubg.prepared$solo_WinTop10Ratio, coercey)
+hist(pubg.prepared$solo_WinTop10Ratio)
 
-
-
-
-
+#devide to train and test
 
 
 
