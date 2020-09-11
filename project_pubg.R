@@ -12,35 +12,39 @@ playerLevel <- function(x){
   else if(x>5.56) "expert"
   else "intermediate"
 }
-pubg.prepared$solo_WinRatio <- NULL
 
 #add target column
 pubg$Level <- sapply(pubg$solo_WinRatio, playerLevel)
 str(pubg)
 
-#check if there are NA's in the data
-table(is.na(pubg))
+pubg.prepared <- pubg
+
+#delete the column to avoid oversampling
+pubg.prepared$solo_WinRatio <- NULL
+
+#check if there are NA's 
+table(is.na(pubg.prepared))
 
 #inspect the target column distribution
 beginner.filter <- pubg$Level == 'beginner'
-intermediate.filter <- pubg$Level == 'intermediate'
-expert.filter <- pubg$Level == 'expert'
-
 table(beginner.filter)
+
+intermediate.filter <- pubg$Level == 'intermediate'
 table(intermediate.filter)
+
+expert.filter <- pubg$Level == 'expert'
 table(expert.filter)
 
 library(ggplot2)
+
+#see distribution of the target column
 ggplot(pubg, aes(Level)) + geom_bar()
 
-pubg.prepared <- pubg
-
+#check if the column is distinct
 unique(pubg$player_name, incomparables = FALSE)
 
 pubg.prepared$player_name <- NULL
 pubg.prepared$tracker_id <- as.factor(pubg.prepared$tracker_id)
-#pubg.prepared$solo_WinRatio <- NULL
-
 str(pubg.prepared)
 
 #check features
@@ -71,7 +75,7 @@ ggplot(pubg, aes(Level ,solo_Rating)) + geom_boxplot()#3
 
 #does 'solo_Kills' affect Level?
 ggplot(pubg, aes(Level ,solo_Kills)) + geom_boxplot()#1
-pubg.prepared$solo_Kills <- NULL
+#not deleted for further analysis
 
 #does 'solo_HeadshotKillRatio' affect Level?
 ggplot(pubg, aes(Level ,solo_HeadshotKillRatio)) + geom_boxplot()#2
@@ -85,18 +89,19 @@ ggplot(data = pubg.prepared) +
   geom_point(mapping = aes(x = solo_TimeSurvived, y = solo_WinTop10Ratio, color = solo_Kills))
 
 str(pubg.prepared)
-#changing column names 
-#install.packages("tidyverse")
-library(tidyverse)
 
 #Show correlations 
 #install.packages("corrplot")
 library(corrplot)
 
-#check correlation between columns with database that only contains numbers
+#check correlation between features
+
 pubg.corr <- pubg.prepared
 pubg.corr$Level <- NULL
 pubg.corr$tracker_id <- NULL
+
+#install.packages("tidyverse")
+library(tidyverse) #(tibble|dplyr|reader|purrr)
 
 #shorten the names of the columns (removing "solo_"...)
 names(pubg.corr) <- substring(names(pubg.corr), 6)
@@ -112,20 +117,16 @@ pubg.prepared$Losses <- NULL
 cor(pubg.prepared$solo_Kills, pubg.prepared$solo_DamageDealt)
 pubg.prepared$DamageDealt <- NULL
 
+str(pubg.prepared)
 #check if bining needed 
 hist(pubg.prepared$solo_TimeSurvived)
-hist(pubg.prepared$solo_KillDeathRatio)
-hist(pubg.prepared$solo_WinRatio)####
-hist(pubg.prepared$solo_TimeSurvived)
 hist(pubg.prepared$solo_RoundsPlayed)
-hist(pubg.prepared$solo_Wins)
 hist(pubg.prepared$solo_WinTop10Ratio)
 hist(pubg.prepared$solo_Top10Ratio)#####
 hist(pubg.prepared$solo_Losses)
 hist(pubg.prepared$solo_Rating)
 hist(pubg.prepared$solo_Kills)
 hist(pubg.prepared$solo_HeadshotKillRatio)
-hist(pubg.prepared$solo_WeeklyKills)
 hist(pubg.prepared$solo_RoundMostKills)
 hist(pubg.prepared$solo_MaxKillStreaks)
 hist(pubg.prepared$solo_AvgSurvivalTime)
@@ -147,14 +148,23 @@ coercey <- function(x){
 }
 pubg.prepared$solo_WinTop10Ratio <- sapply(pubg.prepared$solo_WinTop10Ratio, coercey)
 hist(pubg.prepared$solo_WinTop10Ratio)
+##################################################################################
+
+pubg.glm <- pubg.prepared
+#only leavnig the wanted columns
+
+
+
 
 #devide to train and test
 library(caTools)
 filter <- sample.split(pubg.prepared$solo_TimeSurvived, SplitRatio = 0.7)
-pubg.train <- subset(pubg.prepared,filter==T)
-pubg.test <- subset(pubg.prepared,filter==F)
+pubg.prepared.train <- subset(pubg.prepared,filter==T)
+pubg.prepared.test <- subset(pubg.prepared,filter==F)
 
-dim(pubg.train)
-dim(pubg.test)
+dim(pubg.prepared.train)
+dim(pubg.prepared.test)
 
+loan.model <- glm(Level ~ ., family = binomial(link = "logit"), data = pubg.prepared.train)
+str(pubg.prepared)
 
