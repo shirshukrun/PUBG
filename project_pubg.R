@@ -149,8 +149,12 @@ pubg.prepared$solo_WinTop10Ratio <- sapply(pubg.prepared$solo_WinTop10Ratio, coe
 hist(pubg.prepared$solo_WinTop10Ratio)
 
 #devide to train and test
+library(caTools)
+filter <- sample.split(pubg.prepared$solo_TimeSurvived, SplitRatio = 0.7)
+pubg.train <- subset(pubg.prepared,filter==T)
+pubg.test <- subset(pubg.prepared,filter==F)
 
-
-
+dim(pubg.train)
+dim(pubg.test)
 
 
