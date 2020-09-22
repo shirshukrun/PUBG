@@ -2,6 +2,8 @@ setwd("C:/R/PUBG")
 pubg.raw<-read.csv('PUBG.csv')
 str(pubg.raw)
 summary(pubg.raw)
+pubg.raw$X <- NULL
+pubg.raw$X0 <- NULL
 
 #create data to work on
 pubg <- pubg.raw
@@ -48,7 +50,7 @@ pubg.prepared$tracker_id <- as.factor(pubg.prepared$tracker_id)
 str(pubg.prepared)
 
 #check features
-#we will mark the influence between 1-5
+#we will mark the influence between 1-4
 
 #does 'solo_KillDeathRatio' affect Level?
 ggplot(pubg, aes(Level ,solo_KillDeathRatio)) + geom_boxplot()#1
@@ -67,6 +69,9 @@ pubg.prepared$solo_Wins <- NULL
 #does 'solo_WinTop10Ratio' affect Level?
 ggplot(pubg, aes(Level ,solo_WinTop10Ratio)) + geom_boxplot()#4
 
+#does 'solo_Top10Ratio' affect Level?
+ggplot(pubg, aes(Level ,solo_Top10Ratio)) + geom_boxplot()#3
+
 #does 'solo_Losses' affect Level?
 ggplot(pubg, aes(Level ,solo_Losses)) + geom_boxplot()#2
 
@@ -84,18 +89,36 @@ ggplot(pubg, aes(Level ,solo_HeadshotKillRatio)) + geom_boxplot()#2
 ggplot(pubg, aes(Level ,solo_WeeklyKills)) + geom_boxplot()#1
 pubg.prepared$solo_WeeklyKills <- NULL
 
+#does 'solo_RoundMostKills' affect Level?
+ggplot(pubg, aes(Level ,solo_RoundMostKills)) + geom_boxplot()#2
+
+#does 'solo_MaxKillStreaks' affect Level?
+ggplot(pubg, aes(Level ,solo_MaxKillStreaks)) + geom_boxplot()#1
+pubg.prepared$solo_MaxKillStreaks <- NULL
+
+#does 'solo_MaxKillStreaks' affect Level?
+ggplot(pubg, aes(Level ,solo_AvgSurvivalTime)) + geom_boxplot()#3
+
+#does 'solo_WinPoints' affect Level?
+ggplot(pubg, aes(Level ,solo_WinPoints)) + geom_boxplot()#3
+
+#does 'solo_Heals' affect Level?
+ggplot(pubg, aes(Level ,solo_Heals)) + geom_boxplot()#1
+pubg.prepared$solo_Heals <- NULL
+
+#does 'solo_DamageDealt' affect Level?
+ggplot(pubg, aes(Level ,solo_DamageDealt)) + geom_boxplot()#1
+pubg.prepared$solo_DamageDealt <- NULL
+
 #see ralation between TimeSurvived|Kills|WinTop10Ratio
 ggplot(data = pubg.prepared) + 
-  geom_point(mapping = aes(x = solo_TimeSurvived, y = solo_WinTop10Ratio, color = solo_Kills))
+  geom_point(mapping = aes(x = solo_TimeSurvived, 
+                           y = solo_WinTop10Ratio, 
+                           color = solo_Kills))
 
-str(pubg.prepared)
-
-#Show correlations 
+#correlations 
 #install.packages("corrplot")
 library(corrplot)
-
-#check correlation between features
-
 pubg.corr <- pubg.prepared
 pubg.corr$Level <- NULL
 pubg.corr$tracker_id <- NULL
@@ -113,14 +136,13 @@ corrplot(mat, method = 'circle', outline = T, tl.cex = 0.5,
 
 #remove columns with high correlation
 cor(pubg.prepared$solo_RoundsPlayed, pubg.prepared$solo_Losses)
-pubg.prepared$Losses <- NULL
-cor(pubg.prepared$solo_Kills, pubg.prepared$solo_DamageDealt)
-pubg.prepared$DamageDealt <- NULL
+cor(pubg.prepared$solo_RoundsPlayed, pubg.prepared$solo_TimeSurvived)
+cor(pubg.prepared$solo_TimeSurvived, pubg.prepared$solo_Losses)
+pubg.prepared$solo_RoundsPlayed <- NULL
+pubg.prepared$solo_TimeSurvived <- NULL
 
 str(pubg.prepared)
 #check if bining needed 
-hist(pubg.prepared$solo_TimeSurvived)
-hist(pubg.prepared$solo_RoundsPlayed)
 hist(pubg.prepared$solo_WinTop10Ratio)
 hist(pubg.prepared$solo_Top10Ratio)#####
 hist(pubg.prepared$solo_Losses)
@@ -128,10 +150,8 @@ hist(pubg.prepared$solo_Rating)
 hist(pubg.prepared$solo_Kills)
 hist(pubg.prepared$solo_HeadshotKillRatio)
 hist(pubg.prepared$solo_RoundMostKills)
-hist(pubg.prepared$solo_MaxKillStreaks)
 hist(pubg.prepared$solo_AvgSurvivalTime)
 hist(pubg.prepared$solo_WinPoints)
-hist(pubg.prepared$solo_Heals)
 
 
 #coercing column "solo_Top10Ratio"
@@ -150,21 +170,36 @@ pubg.prepared$solo_WinTop10Ratio <- sapply(pubg.prepared$solo_WinTop10Ratio, coe
 hist(pubg.prepared$solo_WinTop10Ratio)
 ##################################################################################
 
-pubg.glm <- pubg.prepared
+pubg1 <- pubg.prepared
 #only leavnig the wanted columns
-
-
+str(pubg1)
+pubg1$tracker_id <- NULL
+pubg1$solo_Losses <- NULL
+pubg1$solo_Kills <- NULL
+pubg1$solo_HeadshotKillRatio <- NULL
+pubg1$solo_RoundMostKills <- NULL
+pubg1$Level <- as.factor(pubg1$Level)
 
 
 #devide to train and test
 library(caTools)
-filter <- sample.split(pubg.prepared$solo_TimeSurvived, SplitRatio = 0.7)
-pubg.prepared.train <- subset(pubg.prepared,filter==T)
-pubg.prepared.test <- subset(pubg.prepared,filter==F)
+filter <- sample.split(pubg1$solo_WinTop10Ratio, SplitRatio = 0.7)
+pubg1.train <- subset(pubg1,filter==T)
+pubg1.test <- subset(pubg1,filter==F)
 
-dim(pubg.prepared.train)
-dim(pubg.prepared.test)
+dim(pubg1.train)
+dim(pubg1.test)
 
-loan.model <- glm(Level ~ ., family = binomial(link = "logit"), data = pubg.prepared.train)
-str(pubg.prepared)
+#create generalized linear model
+?glm
+pubg.model <- glm(Level ~ ., family = binomial(link = 'logit'), data = pubg1.train)
+summary(pubg1)
+
+#prediction 
+predict.test <- predict(pubg.model, newdata = pubg1.test, type = 'response')
+
+confusion.matrix <- table(predict.test>0.5, pubg1.test$Level)
+
+
+
 
