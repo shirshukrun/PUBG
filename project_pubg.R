@@ -168,38 +168,68 @@ coercey <- function(x){
 }
 pubg.prepared$solo_WinTop10Ratio <- sapply(pubg.prepared$solo_WinTop10Ratio, coercey)
 hist(pubg.prepared$solo_WinTop10Ratio)
-##################################################################################
 
-pubg1 <- pubg.prepared
-#only leavnig the wanted columns
-str(pubg1)
-pubg1$tracker_id <- NULL
-pubg1$solo_Losses <- NULL
-pubg1$solo_Kills <- NULL
-pubg1$solo_HeadshotKillRatio <- NULL
-pubg1$solo_RoundMostKills <- NULL
-pubg1$Level <- as.factor(pubg1$Level)
+pubg.prepared$Level <- as.factor(pubg.prepared$Level)
+
+pubg.prepared$tracker_id <- NULL
+str(pubg.prepared)
+cor(pubg.prepared$solo_Losses, pubg.prepared$solo_Kills)
+pubg.prepared$solo_Losses <- NULL
+
 
 
 #devide to train and test
 library(caTools)
-filter <- sample.split(pubg1$solo_WinTop10Ratio, SplitRatio = 0.7)
-pubg1.train <- subset(pubg1,filter==T)
-pubg1.test <- subset(pubg1,filter==F)
+filter <- sample.split(pubg.prepared$solo_WinTop10Ratio, SplitRatio = 0.7)
+pubg.prepared.train <- subset(pubg.prepared,filter==T)
+pubg.prepared.test <- subset(pubg.prepared,filter==F)
 
-dim(pubg1.train)
-dim(pubg1.test)
+dim(pubg.prepared.train)
+dim(pubg.prepared.test)
 
 #create generalized linear model
 ?glm
-pubg.model <- glm(Level ~ ., family = binomial(link = 'logit'), data = pubg1.train)
-summary(pubg1)
+pubg.model <- glm(Level ~ ., family = binomial(link = 'logit'), data = pubg.prepared.train)
 
 #prediction 
-predict.test <- predict(pubg.model, newdata = pubg1.test, type = 'response')
+predict.test <- predict(pubg.model, newdata = pubg.prepared.test, type = 'response')
 
-confusion.matrix <- table(predict.test>0.5, pubg1.test$Level)
+confusion.matrix <- table(predict.test>0.5, pubg.prepared.test$Level)
+
+precision <- confusion.matrix[2,2] / (confusion.matrix[2,1]+confusion.matrix[2,2])
+recall <- confusion.matrix[2,2] / (confusion.matrix[1,2]+confusion.matrix[2,2])
+
+#decision tree
 
 
 
+##################################################################################
 
+#pubg1 <- pubg.prepared
+#only leavnig the wanted columns
+#str(pubg1)
+#pubg1$tracker_id <- NULL
+#pubg1$solo_Losses <- NULL
+#pubg1$solo_Kills <- NULL
+#pubg1$solo_HeadshotKillRatio <- NULL
+#pubg1$solo_RoundMostKills <- NULL
+#pubg1$Level <- as.factor(pubg1$Level)
+
+#cor()
+#devide to train and test
+#library(caTools)
+#filter <- sample.split(pubg1$solo_WinTop10Ratio, SplitRatio = 0.7)
+#pubg1.train <- subset(pubg1,filter==T)
+#pubg1.test <- subset(pubg1,filter==F)
+
+#dim(pubg1.train)
+#dim(pubg1.test)
+
+#create generalized linear model
+#pubg.model <- glm(Level ~ ., family = binomial(link = 'logit'), data = pubg1.train)
+
+#prediction 
+#predict.test <- predict(pubg.model, newdata = pubg1.test, type = 'response')
+#confusion.matrix <- table(predict.test>0.5, pubg1.test$Level)
+#precision <- confusion.matrix[2,2] / (confusion.matrix[2,1]+confusion.matrix[2,2])
+#recall <- confusion.matrix[2,2] / (confusion.matrix[1,2]+confusion.matrix[2,2])
