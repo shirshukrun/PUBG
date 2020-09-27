@@ -200,9 +200,21 @@ precision <- confusion.matrix[2,2] / (confusion.matrix[2,1]+confusion.matrix[2,2
 recall <- confusion.matrix[2,2] / (confusion.matrix[1,2]+confusion.matrix[2,2])
 
 #decision tree
+install.packages('rpart')
+library(rpart)
+install.packages('rpart.plot')
+library(rpart.plot)
 
+filter2 <- sample.split(pubg.prepared$solo_WinTop10Ratio , SplitRatio = 0.7)
 
+pubg.prepared_2.train <- subset(pubg.prepared,filter == T)
+pubg.prepared_2.test <- subset(pubg.prepared,filter == F)
+dim(pubg.prepared_2.train)
+dim(pubg.prepared_2.test)
+summary(pubg.prepared$Level)
 
+tree_model <- rpart(Level~pubg.prepared_2.train)
+?rpart
 ##################################################################################
 
 #pubg1 <- pubg.prepared
