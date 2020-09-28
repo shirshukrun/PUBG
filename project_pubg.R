@@ -198,50 +198,32 @@ confusion.matrix <- table(predict.test>0.5, pubg.prepared.test$Level)
 
 precision <- confusion.matrix[2,2] / (confusion.matrix[2,1]+confusion.matrix[2,2])
 recall <- confusion.matrix[2,2] / (confusion.matrix[1,2]+confusion.matrix[2,2])
+##############################################################
 
-#decision tree
-install.packages('rpart')
+####decision tree
+#install.packages('rpart')
 library(rpart)
-install.packages('rpart.plot')
+#install.packages('rpart.plot')
 library(rpart.plot)
+tree <- rpart(Level ~ ., pubg.prepared.train)
 
-filter2 <- sample.split(pubg.prepared$solo_WinTop10Ratio , SplitRatio = 0.7)
+prp(tree)
 
-pubg.prepared_2.train <- subset(pubg.prepared,filter == T)
-pubg.prepared_2.test <- subset(pubg.prepared,filter == F)
-dim(pubg.prepared_2.train)
-dim(pubg.prepared_2.test)
-summary(pubg.prepared$Level)
+predicted <- predict(tree,pubg.prepared.test)
+predprob_tree<-predict(tree, pubg.prepared.test, type = 'prob')
 
-tree_model <- rpart(Level~pubg.prepared_2.train)
-?rpart
-##################################################################################
+#install.packages('pROC')
+library(pROC)
 
-#pubg1 <- pubg.prepared
-#only leavnig the wanted columns
-#str(pubg1)
-#pubg1$tracker_id <- NULL
-#pubg1$solo_Losses <- NULL
-#pubg1$solo_Kills <- NULL
-#pubg1$solo_HeadshotKillRatio <- NULL
-#pubg1$solo_RoundMostKills <- NULL
-#pubg1$Level <- as.factor(pubg1$Level)
+rocCurve_tree<-roc(pubg.prepared.test$Level, predprob_tree[,'expert'], levels = c("expert","beginner"))
+plot(rocCurve_tree,col='yellow', main = "Roc Chart")
+auc(rocCurve_tree)# AUC= 0.9945
 
-#cor()
-#devide to train and test
-#library(caTools)
-#filter <- sample.split(pubg1$solo_WinTop10Ratio, SplitRatio = 0.7)
-#pubg1.train <- subset(pubg1,filter==T)
-#pubg1.test <- subset(pubg1,filter==F)
+rocCurve_tree<-roc(pubg.prepared.test$Level, predprob_tree[,'expert'], levels = c("expert","intermediate"))
+plot(rocCurve_tree,col='yellow', main = "Roc Chart")
+auc(rocCurve_tree)# AUC= 0.906
 
-#dim(pubg1.train)
-#dim(pubg1.test)
+rocCurve_tree<-roc(pubg.prepared.test$Level, predprob_tree[,'intermediate'], levels = c("beginner","intermediate"))
+plot(rocCurve_tree,col='yellow', main = "Roc Chart")
+auc(rocCurve_tree)# AUC= 0.917
 
-#create generalized linear model
-#pubg.model <- glm(Level ~ ., family = binomial(link = 'logit'), data = pubg1.train)
-
-#prediction 
-#predict.test <- predict(pubg.model, newdata = pubg1.test, type = 'response')
-#confusion.matrix <- table(predict.test>0.5, pubg1.test$Level)
-#precision <- confusion.matrix[2,2] / (confusion.matrix[2,1]+confusion.matrix[2,2])
-#recall <- confusion.matrix[2,2] / (confusion.matrix[1,2]+confusion.matrix[2,2])
