@@ -176,8 +176,6 @@ str(pubg.prepared)
 cor(pubg.prepared$solo_Losses, pubg.prepared$solo_Kills)
 pubg.prepared$solo_Losses <- NULL
 
-
-
 #devide to train and test
 library(caTools)
 filter <- sample.split(pubg.prepared$solo_WinTop10Ratio, SplitRatio = 0.7)
@@ -187,20 +185,16 @@ pubg.prepared.test <- subset(pubg.prepared,filter==F)
 dim(pubg.prepared.train)
 dim(pubg.prepared.test)
 
-#create generalized linear model
-?glm
+########################   glm  generalized linear model  ####################
 pubg.model <- glm(Level ~ ., family = binomial(link = 'logit'), data = pubg.prepared.train)
-
 #prediction 
 predict.test <- predict(pubg.model, newdata = pubg.prepared.test, type = 'response')
-
 confusion.matrix <- table(predict.test>0.5, pubg.prepared.test$Level)
 
 precision <- confusion.matrix[2,2] / (confusion.matrix[2,1]+confusion.matrix[2,2])
 recall <- confusion.matrix[2,2] / (confusion.matrix[1,2]+confusion.matrix[2,2])
-##############################################################
 
-####decision tree
+########################   decision tree   ####################
 #install.packages('rpart')
 library(rpart)
 #install.packages('rpart.plot')
@@ -209,7 +203,7 @@ tree <- rpart(Level ~ ., pubg.prepared.train)
 
 prp(tree)
 
-predicted <- predict(tree,pubg.prepared.test)
+predictedT <- predict(tree,pubg.prepared.test)
 predprob_tree<-predict(tree, pubg.prepared.test, type = 'prob')
 
 #install.packages('pROC')
@@ -217,17 +211,17 @@ library(pROC)
 
 rocCurve_tree<-roc(pubg.prepared.test$Level, predprob_tree[,'expert'], levels = c("expert","beginner"))
 plot(rocCurve_tree,col='yellow', main = "Roc Chart")
-auc(rocCurve_tree)# AUC= 0.9945
+auc(rocCurve_tree)
 
 rocCurve_tree<-roc(pubg.prepared.test$Level, predprob_tree[,'expert'], levels = c("expert","intermediate"))
 plot(rocCurve_tree,col='yellow', main = "Roc Chart")
-auc(rocCurve_tree)# AUC= 0.906
+auc(rocCurve_tree)
 
 rocCurve_tree<-roc(pubg.prepared.test$Level, predprob_tree[,'intermediate'], levels = c("beginner","intermediate"))
 plot(rocCurve_tree,col='yellow', main = "Roc Chart")
-auc(rocCurve_tree)# AUC= 0.917
+auc(rocCurve_tree)
 
-#######Random forest
+########################   Random forest   ####################
 #install.packages('randomForest')
 library(randomForest)
 rf.model<-randomForest(pubg.prepared.test$Level~. , data = pubg.prepared.test)
@@ -245,4 +239,18 @@ auc(ROC) #1
 ROC<-roc(pubg.prepared.test$Level, predictprob[,'intermediate'],levels = c("beginner","intermediate") )
 plot(ROC,col='yellow', main = "Roc Chart")
 auc(ROC) #1
+
+########################################################################################
+
+# rocCurveGLM <- roc(pubg.prepared.test$Level, predict.test, direction = "<", levels = c("expert","beginner"))
+# rocCurveDT <- roc(pubg.prepared.test$Level, predictedT, direction = "<", levels = c("expert","intermediate",))
+# rocCurveRF <- roc(pubg.prepared.test$Level, predicted, direction = "<", levels = c("beginner","intermediate"))
+# 
+# plot(rocCurveNB, col ='red', main = 'ROC chart')
+# par(new=TRUE)
+# 
+# plot(rocCurveTR, col ='blue', main = 'ROC chart')
+# 
+# auc(rocCurveNB)
+# auc(rocCurveTR)
 
