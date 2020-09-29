@@ -194,7 +194,31 @@ confusion.matrix <- table(predict.test>0.5, pubg.prepared.test$Level)
 precision <- confusion.matrix[2,2] / (confusion.matrix[2,1]+confusion.matrix[2,2])
 recall <- confusion.matrix[2,2] / (confusion.matrix[1,2]+confusion.matrix[2,2])
 
+#############################################################################
+treeModel <- rpart(Level~.,pubg.prepared.train) 
+rpart.plot(treeModel, box.palette = "RdBu", shadow.col = "grey", nn=TRUE)
+
+predict.prob <- predict(treeModel,pubg.prepared.test)
+predict.prob.beginner <- predict.prob[,'beginner']
+predict.prob.intermediate <- predict.prob[,'intermediate']
+predict.prob.expert <- predict.prob[,'expert']
+
+predicitonB <- predict.prob.beginner > 0.5
+predicitonI <- predict.prob.intermediate > 0.5
+
+actual <- bankrupt.test$class
+cf <- table(prediciton,actual)
+summary(bankrupt)
+precision <- cf['TRUE','1']/(cf['TRUE','1'] + cf['TRUE','0'])
+recall <- cf['TRUE','1']/(cf['TRUE','1'] + cf['FALSE','1'])
+#recall 0.6015 percition-0.7475
+
+
+
+
+
 ########################   decision tree   ####################
+
 #install.packages('rpart')
 library(rpart)
 #install.packages('rpart.plot')
