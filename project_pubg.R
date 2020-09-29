@@ -227,3 +227,22 @@ rocCurve_tree<-roc(pubg.prepared.test$Level, predprob_tree[,'intermediate'], lev
 plot(rocCurve_tree,col='yellow', main = "Roc Chart")
 auc(rocCurve_tree)# AUC= 0.917
 
+#######Random forest
+#install.packages('randomForest')
+library(randomForest)
+rf.model<-randomForest(pubg.prepared.test$Level~. , data = pubg.prepared.test)
+print(rf.model)
+predicted<-predict(rf.model, pubg.prepared.test)
+predictprob<-predict(rf.model, pubg.prepared.test, type = 'prob')
+ROC<-roc(pubg.prepared.test$Level, predictprob[,'expert'],levels = c("expert","beginner") )
+plot(ROC,col='yellow', main = "Roc Chart")
+auc(ROC) #1
+
+ROC<-roc(pubg.prepared.test$Level, predictprob[,'expert'],levels = c("expert","intermediate") )
+plot(ROC,col='yellow', main = "Roc Chart")
+auc(ROC) #1
+
+ROC<-roc(pubg.prepared.test$Level, predictprob[,'intermediate'],levels = c("beginner","intermediate") )
+plot(ROC,col='yellow', main = "Roc Chart")
+auc(ROC) #1
+
