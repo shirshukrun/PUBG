@@ -194,31 +194,7 @@ confusion.matrix <- table(predict.test>0.5, pubg.prepared.test$Level)
 precision <- confusion.matrix[2,2] / (confusion.matrix[2,1]+confusion.matrix[2,2])
 recall <- confusion.matrix[2,2] / (confusion.matrix[1,2]+confusion.matrix[2,2])
 
-#############################################################################
-treeModel <- rpart(Level~.,pubg.prepared.train) 
-rpart.plot(treeModel, box.palette = "RdBu", shadow.col = "grey", nn=TRUE)
-
-predict.prob <- predict(treeModel,pubg.prepared.test)
-predict.prob.beginner <- predict.prob[,'beginner']
-predict.prob.intermediate <- predict.prob[,'intermediate']
-predict.prob.expert <- predict.prob[,'expert']
-
-predicitonB <- predict.prob.beginner > 0.5
-predicitonI <- predict.prob.intermediate > 0.5
-
-actual <- bankrupt.test$class
-cf <- table(prediciton,actual)
-summary(bankrupt)
-precision <- cf['TRUE','1']/(cf['TRUE','1'] + cf['TRUE','0'])
-recall <- cf['TRUE','1']/(cf['TRUE','1'] + cf['FALSE','1'])
-#recall 0.6015 percition-0.7475
-
-
-
-
-
 ########################   decision tree   ####################
-
 #install.packages('rpart')
 library(rpart)
 #install.packages('rpart.plot')
@@ -252,6 +228,7 @@ rf.model<-randomForest(pubg.prepared.test$Level~. , data = pubg.prepared.test)
 print(rf.model)
 predicted<-predict(rf.model, pubg.prepared.test)
 predictprob<-predict(rf.model, pubg.prepared.test, type = 'prob')
+
 ROC<-roc(pubg.prepared.test$Level, predictprob[,'expert'],levels = c("expert","beginner") )
 plot(ROC,col='yellow', main = "Roc Chart")
 auc(ROC) #1
@@ -263,18 +240,46 @@ auc(ROC) #1
 ROC<-roc(pubg.prepared.test$Level, predictprob[,'intermediate'],levels = c("beginner","intermediate") )
 plot(ROC,col='yellow', main = "Roc Chart")
 auc(ROC) #1
-
-########################################################################################
-
-# rocCurveGLM <- roc(pubg.prepared.test$Level, predict.test, direction = "<", levels = c("expert","beginner"))
-# rocCurveDT <- roc(pubg.prepared.test$Level, predictedT, direction = "<", levels = c("expert","intermediate",))
-# rocCurveRF <- roc(pubg.prepared.test$Level, predicted, direction = "<", levels = c("beginner","intermediate"))
+####################################################################################
+# #install.packages("caTools")
+# library(caTools)
 # 
-# plot(rocCurveNB, col ='red', main = 'ROC chart')
-# par(new=TRUE)
+# #data
+# filter <-sample.split(pubg.prepared$Level, SplitRatio = 0.7)
 # 
-# plot(rocCurveTR, col ='blue', main = 'ROC chart')
+# pubg.preparedNB.train <- subset(pubg.prepared, filter == TRUE)
+# pubg.preparedNB.test <- subset(pubg.prepared, filter == FALSE)
 # 
-# auc(rocCurveNB)
-# auc(rocCurveTR)
-
+# dim(pubg.preparedNB.train)
+# # 61529   9
+# 
+# dim(pubg.preparedNB.test)
+# # 26369   9
+# 
+# #install.packages('e1071')
+# library(e1071)
+# 
+# #nb model
+# modelNB <- naiveBayes(pubg.preparedNB.train$Level ~ ., data = pubg.preparedNB.train)
+# 
+# prediction <- predict(modelNB, pubg.preparedNB.test,type = 'raw')
+# 
+# prediction_BN <- prediction[,'beginner']
+# prediction_IM <- prediction[,'intermediate']
+# prediction_XP <- prediction[,'beginner']
+# 
+# actual <- pubg.preparedNB.test$Level 
+# 
+# predictedBN <- prediction_BN > 0.5
+# 
+# #confusion matrix
+# cfNB <- table(predicted,actual)
+# 
+# precision <- cfNB[2,2]/( cfNB[2,2]+ cfNB[2,1]) 
+# 
+# recall <- cfNB[2,2]/( cfNB[2,2]+ cfNB[1,2])   
+# total_errors_NB<- (cfNB['TRUE','0']+cfNB['FALSE','1'])/dim(bankrupt.test)[1]
+# 
+# #Computing base level 
+# number.bankrupt <- dim(bankrupt[bankrupt$class=='1',])[1]
+# base_level <- number.bankrupt/dim(bankrupt)[1]
